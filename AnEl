@@ -1,0 +1,94 @@
+// ArabicTransliterator.js
+  constructor() {
+    this.letterMap = {
+      'ا':'a','أ':'a','إ':'i','آ':'aa','ب':'b','ت':'t','ث':'th','ج':'j','ح':'ḥ','خ':'kh',
+      'د':'d','ذ':'dh','ر':'r','ز':'z','س':'s','ش':'sh','ص':'ṣ','ض':'ḍ','ط':'ṭ','ظ':'ẓ',
+      'ع':'ʿ','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','و':'w','ي':'y','ى':'a',
+      'ة':'h','ء':'ʾ','ئ':'ʾ','ؤ':'ʾ'
+    };
+
+    this.sunLetters = ['ت','ث','د','ذ','ر','ز','س','ش','ص','ض','ط','ظ','ل','ن'];
+
+    this.vowelMap = {
+      'َ':'a',
+      'ُ':'u',
+      'ِ':'i',
+      'ً':'an',
+      'ٌ':'un',
+      'ٍ':'in'
+    };
+
+    this.SUKUN = 'ْ';
+    this.SHADDA = 'ّ';
+  }
+
+  transliterate(text) {
+    let output = '';
+    let lastLatin = '';
+    let lastVowel = '';
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const next = text[i + 1];
+
+      // معالجة (الـ)
+      if (char === 'ا' && next === 'ل') {
+        const afterLam = text[i + 2];
+        output += 'al';
+        lastLatin = 'l';
+        i++;
+
+        if (this.sunLetters.includes(afterLam)) {
+          output += this.letterMap[afterLam];
+          lastLatin = this.letterMap[afterLam];
+          i++;
+        }
+        continue;
+      }
+
+      // حرف عربي
+      if (this.letterMap[char]) {
+        lastLatin = this.letterMap[char];
+
+        // مدّ ذكي
+        if ((char === 'ا' && lastVowel === 'a') ||
+            (char === 'و' && lastVowel === 'u') ||
+            (char === 'ي' && lastVowel === 'i')) {
+          output += lastVowel;
+        } else {
+          output += lastLatin;
+        }
+        lastVowel = '';
+      }
+      // شدة
+      else if (char === this.SHADDA) {
+        output += lastLatin;
+      }
+      // حركة
+      else if (this.vowelMap[char]) {
+        lastVowel = this.vowelMap[char];
+        output += lastVowel;
+      }
+      // سكون
+      else if (char === this.SUKUN) {
+        lastVowel = '';
+        continue;
+      }
+      // غير ذلك
+      else {
+        output += char;
+        lastLatin = '';
+        lastVowel = '';
+      }
+    }
+
+    return output;
+  }
+}
+
+// دعم المتصفح و Node.js
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = ArabicTransliterator;
+} else {
+  window.ArabicTransliterator = ArabicTransliterator;
+}
